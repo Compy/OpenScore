@@ -211,6 +211,8 @@ class PinCounter:
     '''
     def getPinCount(self, use_last_ball_score = False):
         deck_surface = self.getDeckSnapshot()
+        if deck_surface == None:
+            return
         self.resetPinDisplay()
         # Always assume there are 0 pins standing
         num_pins_standing = 0
