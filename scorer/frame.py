@@ -19,7 +19,8 @@ class Frame(object):
         '''
         self.number = number
         self.shots = []
-        self.score = -1
+        self.score = 0
+        self.shouldDisplay = False
         
         if (number == 10):
             self.shots.append(-1)

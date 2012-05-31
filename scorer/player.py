@@ -6,6 +6,7 @@ Created on Apr 22, 2012
 import pygame
 import sys, re
 from pygame.locals import *
+import math
 
 from frame import Frame
 
@@ -47,7 +48,7 @@ class Player(object):
         self.bowling_scorer = bowling_scorer
         self.current_score = ""
         self.blacklight = blacklight
-        
+        self.truScore = 0
         self.frames_completed_this_turn = 0
         
         self.rolls = [-1] * 21
@@ -67,7 +68,7 @@ class Player(object):
         self.current_score = ""
         self.frames_completed_this_turn = 0
         self.rolls = [-1] * 21
-        
+        self.truScore = 0
         # Blank out all frame data
         for i in range(10):
             f = Frame(i + 1)
@@ -307,4 +308,107 @@ class Player(object):
         return score
     
     
-    
+    def calculate(self):
+        nextBall = None        # Hold value of next ball
+        thirdBall = None       # Hold value of 3rd ball
+        b2 = 0              # Hold index of next ball
+        b3 = 0              # Hold index of 3rd ball
+        totalScore = 0      # Total current score
+        truScore = 0        # Total true score
+        
+        frameRolls = [""] * 20
+        
+        # First, clear out all of our score fields
+        i = 0
+        for f in self.frames:
+            f.score = 0
+            f.shouldDisplay = False
+            if (f.isStrike()):
+                frameRolls[i] = "x"
+                i += 2
+            elif (f.isSpare()):
+                frameRolls[i] = f.shots[0]
+                frameRolls[i+1] = "/"
+                i += 2
+            else:
+                for s in f.shots:
+                    if s != -1:
+                        frameRolls[i] = s
+                    i+=1
+            
+        for j in range(0,19,2):
+            frameScore = 0
+            shouldDisplay = False            
+            
+            # Check strike, and since j is even, it only checks the first ball of each frame
+            if (frameRolls[j] == "x"):
+                frameScore += 10
+                truScore += 10
+                if (j < 16): # Regular frame
+                    b2 = j+1
+                    b3 = j+2
+                    nextBall = frameRolls[b3]
+                    if (nextBall == "x"): # If the next ball is a strike, then take the third
+                        b3 = j+4
+                        thirdBall = frameRolls[b3]
+                    else:
+                        b3 = j+3
+                        thirdBall = frameRolls[b3] # Otherwise, its the second ball in the next frame
+                if (j == 16): # 9th frame
+                    b2 = j+2
+                    b3 = j+3
+                    nextBall = frameRolls[b2] # Next ball is first ball in next frame
+                    thirdBall = frameRolls[b3] # Third ball is 2nd ball in next frame
+                if (j == 18): # 10th frame
+                    b2 = j+1
+                    b3 = j+2
+                    nextBall = frameRolls[b2] # Next ball is actually next ball
+                    thirdBall = frameRolls[b3] # Third ball is actually third ball
+                    
+                if (nextBall != None and thirdBall != None): # Next two balls have a value
+                    if (nextBall == "x"): # Is the next ball a strike?
+                        frameScore += 10
+                        truScore += 10
+                        if (thirdBall == "x"): # Is the third ball a strike too?
+                            frameScore += 10
+                            truScore += 10
+                        else:
+                            frameScore += int(thirdBall)    # Not a strike, just take thevalue
+                            truScore += int(thirdBall)
+                    else: # Must be a regular number
+                        if (thirdBall == "/"): # Is it a spare?
+                            frameScore += 10
+                            truScore += 10
+                        else: # Just an open frame
+                            frameScore += int(nextBall) + int(thirdBall)
+                            truScore += int(nextBall) + int(thirdBall)
+                            
+                    shouldDisplay = True
+            else:
+                b2 = j+1
+                b3 = j+2
+                if (frameRolls[j] != "" and frameRolls[b2] == ""):
+                    truScore += int(frameRolls[j])
+                else:
+                    if (frameRolls[j] != "" and frameRolls[b2] != ""): # Not a strike, so we get a spare or open frame
+                        if (frameRolls[b2] == "/"): #We got a spare
+                            frameScore += 10
+                            truScore += 10
+                            if (frameRolls[b3] != ""): # Check the next ball
+                                if (frameRolls[b3] == "x"): # Next ball is a strike
+                                    frameScore += 10
+                                    truScore += 10
+                                    shouldDisplay = True
+                                else: # Next ball isn't a strike, just take the value
+                                    frameScore += int(frameRolls[b3])
+                                    truScore += int(frameRolls[b3])
+                                    shouldDisplay = True
+                        else: # This frame is an open frame, just add the two values
+                            frameScore += int(frameRolls[j]) + int(frameRolls[b2])
+                            truScore += int(frameRolls[j]) + int(frameRolls[b2])
+                            shouldDisplay = True
+            totalScore += frameScore # Keep running total of our score
+            self.truScore = truScore
+            if (shouldDisplay):
+                k = math.ceil(j / 2.0)
+                self.frames[k].score = totalScore
