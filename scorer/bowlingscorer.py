@@ -178,8 +178,7 @@ class PinCounter:
             # Also specify the size as 320x240
             # On linux, instead of '0' we should use /dev/video0
             if (platform.system() == "Windows"):
-                #self.camera = pygame.camera.Camera(0, cam_size, "YUV")
-                self.camera = pygame.camera.Camera()
+                self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
             else:
                 self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
             self.camera.start()
