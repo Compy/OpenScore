@@ -242,10 +242,13 @@ class Player(object):
             textpos = text.get_rect(x=136 + (i * 62) + xscew, y=47 + (self.number * 133) + yscew)
             surface.blit(text, textpos)
             
+            # This is broken as crap, so we're not going to enable it
+            '''
             if (f.score != -1 and f.number != 10):
                 text = self.score_font.render(str(f.score), 1, (255, 255, 255))
                 textpos = text.get_rect(x=136 + (i * 62) + xscew, y=92 + (self.number * 133) + yscew)
                 surface.blit(text, textpos)
+            '''
             
             i += 1
             

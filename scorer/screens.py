@@ -126,7 +126,7 @@ class BootScreen(Screen):
         self.bg = pygame.image.load("splash.jpg")
         self.version_font = pygame.font.SysFont("Arial", 18, False, True)
         self.welcome_font = pygame.font.SysFont("Arial", 48, True)
-        self.display_time = 5000 # 5000ms = 5s
+        self.display_time = 8000 # 8000ms = 8s
         self.time_shown = 0
         self.center_name = self.bowling_scorer.config.getvalue("System","center_name")
         
@@ -562,6 +562,10 @@ class ScoreCorrectionScreen(Screen):
         textpos = text.get_rect(x=10, y=50)
         screen_surface.blit(text, textpos)
         
+        text = self.text_font.render("Hit ESC to exit", 1, (0,0,0))
+        textpos = text.get_rect(x=10, y=500)
+        screen_surface.blit(text, textpos)
+        
         self.bowling_scorer.players[self.selected_player].DrawFrames(surface=screen_surface,yscew=50,showTotal=False,current_box=self.current_box_pos)
         
         super(ScoreCorrectionScreen, self).Draw(screen_surface)
@@ -598,7 +602,7 @@ class ScoreCorrectionScreen(Screen):
             shot = 0
             
         #self.bowling_scorer.players[self.selected_player].DrawFrames(surface=screen_surface,yscew=50,showTotal=False,current_box=self.current_box_pos)
-        if (key == "X"):
+        if (key == "X" or key == "x"):
             self.bowling_scorer.players[self.selected_player].frames[frame].makeStrike()
         elif (key == "/"):
             self.bowling_scorer.players[self.selected_player].frames[frame].makeSpare()

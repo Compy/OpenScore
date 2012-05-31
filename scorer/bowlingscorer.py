@@ -135,6 +135,8 @@ class BowlingScorer(object):
         
         if (is_game_over):
             self.current_player = -1
+            self.screenManager.score.show_marquee = True
+            self.screenManager.score.show_help_text = False
             
     def new_game(self):
         if len(self.players) == 0: return
@@ -145,6 +147,8 @@ class BowlingScorer(object):
         self.current_player = 0
         self.current_frame = 0
         self.current_ball = 0
+        self.screenManager.score.show_marquee = False
+        self.screenManager.score.show_help_text = True
 
 class PinCounter:
     camera = None
