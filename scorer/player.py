@@ -187,10 +187,10 @@ class Player(object):
     This needs to be re-written... badly.
     '''
     def UpdateFrameScores(self):
-        
-        for f in self.frames:
-            if (f.hasBowled()):
-                f.score = self.calcScoreThruFrame(f.number)
+        self.calculate()
+        #for f in self.frames:
+        #    if (f.hasBowled()):
+        #        f.score = self.calcScoreThruFrame(f.number)
         #        if not f.isStrike() and not f.isSpare():
         #            f.score = self.calcScoreThruFrame(f.number)
                             
@@ -244,12 +244,10 @@ class Player(object):
             surface.blit(text, textpos)
             
             # This is broken as crap, so we're not going to enable it
-            '''
             if (f.shouldDisplay and f.number != 10):
                 text = self.score_font.render(str(f.score), 1, (255, 255, 255))
                 textpos = text.get_rect(x=136 + (i * 62) + xscew, y=92 + (self.number * 133) + yscew)
                 surface.blit(text, textpos)
-            '''
             
             i += 1
             
@@ -316,7 +314,7 @@ class Player(object):
         totalScore = 0      # Total current score
         truScore = 0        # Total true score
         
-        frameRolls = [""] * 20
+        frameRolls = [""] * 21
         
         # First, clear out all of our score fields
         i = 0
@@ -365,7 +363,7 @@ class Player(object):
                     nextBall = frameRolls[b2] # Next ball is actually next ball
                     thirdBall = frameRolls[b3] # Third ball is actually third ball
                     
-                if (nextBall != None and thirdBall != None): # Next two balls have a value
+                if (nextBall != "" and thirdBall != ""): # Next two balls have a value
                     if (nextBall == "x"): # Is the next ball a strike?
                         frameScore += 10
                         truScore += 10

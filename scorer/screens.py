@@ -140,13 +140,6 @@ class BootScreen(Screen):
         textpos = text.get_rect(x=700, y=550)
         screen_surface.blit(text, textpos)
         
-        text = self.welcome_font.render("Welcome to", 1, (255, 255, 255))
-        textpos = text.get_rect(centerx=400, y=150)
-        screen_surface.blit(text, textpos)
-        text = self.welcome_font.render(self.center_name, 1, (255, 255, 255))
-        textpos = text.get_rect(centerx=400, y=250)
-        screen_surface.blit(text, textpos)
-        
     def Update(self, game_time):
         super(BootScreen, self).Update(game_time)
         
