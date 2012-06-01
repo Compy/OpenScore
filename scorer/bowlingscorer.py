@@ -272,6 +272,9 @@ class PinCounter:
         else:
             pygame.transform.threshold(self.thresholded, self.snapshot, self.detect_color, self.threshold_detect, self.other_colors_nondetect, 1)
             
+        if self.thresholded != None:
+            pygame.transform.scale(self.thresholded, (320,240), self.thresholded)
+            
         return self.thresholded
         
     '''
