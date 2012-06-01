@@ -1,5 +1,5 @@
 
-import os, sys, platform
+import os, sys, platform, traceback
 import pygame
 import pygame.camera
 import random
@@ -178,7 +178,7 @@ class PinCounter:
             # Also specify the size as 320x240
             # On linux, instead of '0' we should use /dev/video0
             if (platform.system() == "Windows"):
-                self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
+                self.camera = pygame.camera.Camera(1,size=cam_size, mode = "YUV")
             else:
                 self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
             self.camera.start()
@@ -196,6 +196,9 @@ class PinCounter:
             
         except:
             print "Camera initialization failed. Make sure the scoring camera is plugged in."
+            print "Stack Trace:"
+            traceback.print_exc(file=sys.stdout)
+            sys.exit()
     
         self.pin_display = []
         self.resetPinDisplay()
