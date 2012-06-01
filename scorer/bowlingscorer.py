@@ -272,10 +272,12 @@ class PinCounter:
         else:
             pygame.transform.threshold(self.thresholded, self.snapshot, self.detect_color, self.threshold_detect, self.other_colors_nondetect, 1)
             
-        if self.thresholded != None:
-            pygame.transform.scale(self.thresholded, (320,240), self.thresholded)
+        resized = pygame.Surface((320,240), 0, self.screen)
             
-        return self.thresholded
+        if self.thresholded != None:
+            pygame.transform.scale(self.thresholded, (320,240), resized)
+            
+        return resized
         
     '''
     Reloads the calibration points from the configuration file as well as
