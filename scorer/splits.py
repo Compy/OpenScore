@@ -6,6 +6,10 @@ Created on Jun 11, 2012
 splits = []
 splits.append((7,10))
 splits.append((6,7))
+splits.append((4,6))
+splits.append((2,10))
+splits.append((2,4,10))
+splits.append((4,9))
 splits.append((4,10))
 splits.append((7,9))
 splits.append((8,10))
