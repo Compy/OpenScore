@@ -21,6 +21,7 @@ class Frame(object):
         self.shots = []
         self.score = 0
         self.shouldDisplay = False
+        self.isSplit = False
         
         if (number == 10):
             self.shots.append(-1)
@@ -148,6 +149,7 @@ class Frame(object):
     
     def isSpare(self):
         return (self.shots[0] + self.shots[1] == 10 and self.shots[0] != 10)
+    
     
     def isStrike(self):
         return (self.shots[0] == 10)

@@ -7,6 +7,7 @@ import pygame
 import sys, re
 from pygame.locals import *
 import math
+import splits
 
 from frame import Frame
 
@@ -83,12 +84,13 @@ class Player(object):
     handles the logic of making sure each frame's shots only sum to ten.
     IE: a 9/ shows up here as '9 1'
     '''
-    def addShot(self, pinCount):
+    def addShot(self, pinCount, deck_state):
         self.rolls[self.current_roll] = pinCount
         
         if (self.current_frame == 9):
             if self.frames[self.current_frame].shots[0] == -1:
                 self.frames[self.current_frame].shots[0] = pinCount
+                self.frames[self.current_frame].isSplit = splits.isSplit(deck_state)
             elif self.frames[self.current_frame].shots[1] == -1:
                 if pinCount == 10 and self.frames[self.current_frame].shots[0] != 10:
                     self.frames[self.current_frame].shots[1] = 10 - self.frames[self.current_frame].shots[0]
@@ -108,6 +110,7 @@ class Player(object):
                 self.frames[self.current_frame].shots[1] = 10 - self.frames[self.current_frame].shots[0]
             elif (self.frames[self.current_frame].shots[0] == -1):
                 self.frames[self.current_frame].shots[0] = pinCount
+                self.frames[self.current_frame].isSplit = splits.isSplit(deck_state)
             elif (self.frames[self.current_frame].shots[1] == -1):
                 self.frames[self.current_frame].shots[1] = pinCount
             elif (self.current_frame == 9):
@@ -226,8 +229,17 @@ class Player(object):
         for f in self.frames:
             #if not f.hasBowled:
             #    continue
-            
-            if (current_box == (2 * f.number) or current_box == (2 * f.number) - 1):
+            if ((current_box >= 20) and f.number == 10):
+                # Draw a rect here
+                if (current_box == 20):
+                    box_pos = 28
+                elif (current_box == 21):
+                    box_pos = 50
+                px = 136 + (i * 62) + xscew + box_pos
+                py = 47 + (self.number * 133) + yscew
+                
+                pygame.draw.rect(surface, pygame.color.Color("blue"), (px,py,20,36))
+            elif (current_box == (2 * f.number) or current_box == (2 * f.number) - 1):
                 # Draw a rect here
                 if (current_box == (2 * f.number)):
                     box_pos = 20
@@ -237,7 +249,9 @@ class Player(object):
                 py = 47 + (self.number * 133) + yscew
                 
                 pygame.draw.rect(surface, pygame.color.Color("blue"), (px,py,20,36))
-                pass
+            
+            if (f.isSplit == True):
+                pygame.draw.circle(surface, pygame.color.Color("blue"), (135 + (i * 62) + xscew + 16, 50 + (self.number * 133) + yscew + 16), 18)
             
             text = self.score_font.render(f.getFrameString(), 1, (255, 255, 255))
             textpos = text.get_rect(x=136 + (i * 62) + xscew, y=47 + (self.number * 133) + yscew)

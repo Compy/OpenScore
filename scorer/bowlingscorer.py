@@ -31,6 +31,7 @@ class BowlingScorer(object):
         self.mode = "GAME_OVER"
         BowlingScorer.instance = self
         self.is_first_ball = True
+        self.min_pincount_strike = 10
     
     def cleanup(self):
         self.screenManager.Cleanup()

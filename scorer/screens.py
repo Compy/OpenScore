@@ -8,6 +8,7 @@ import os, sys, platform, math
 import pygame
 import pygame.camera
 import pygame.time
+import splits
 from pygame.locals import *
 from ui_components import *
 from functools import partial
@@ -116,6 +117,13 @@ class Screen(object):
         self.alpha = 255
         self.fade_step = 0
         self.mode = SCREEN_MODE_FADEOUT
+        
+    def _getMaxComponentID(self):
+        max_component_id = 0
+        for e in self.components:
+            if e.taborder > max_component_id:
+                max_component_id = e.taborder
+        return max_component_id
     
 '''
 The boot screen that shows the splash imagery while the system boots up
@@ -293,7 +301,16 @@ class ScoreScreen(Screen):
         player = self.bowling_scorer.players[self.bowling_scorer.current_player]
         if self.bowling_scorer.is_first_ball == True:
             pinCount = self.bowling_scorer.pinCounter.getPinCount(False)
+            
+            '''
+            If this is the first ball, AND we're doing no-tap, check things out here
+            and adjust the count as needed.
+            '''
+            if (pinCount >= self.bowling_scorer.min_pincount_strike):
+                pinCount = 10
+            
             if (pinCount < 10):
+                
                 self.screen_manager.pindication.show_pins = self.bowling_scorer.pinCounter.pin_display
                 self.screen_manager.pindication.FadeIn()
                 self.screen_manager.AddScreen(self.screen_manager.pindication)
@@ -301,7 +318,7 @@ class ScoreScreen(Screen):
         else:
             pinCount = self.bowling_scorer.pinCounter.getPinCount(True)
             
-        player.addShot(pinCount)
+        player.addShot(pinCount,self.bowling_scorer.pinCounter.pin_display)
         
     def RefreshPlayerInfo(self):
         for p in self.bowling_scorer.players:
@@ -584,23 +601,36 @@ class ScoreCorrectionScreen(Screen):
             self.HandleScoreCorrection(chr(event.key))
             
     def HandleScoreCorrection(self, key):
-        if (self.current_box_pos <= 2):
-            frame = 0
+        if (self.current_box_pos >= 19):
+            frame = 9
+            shot = self.current_box_pos - 19;
         else:
-            frame = int(math.ceil((self.current_box_pos / 2.0))) - 1
-            
-        if (self.current_box_pos % 2 == 0):
-            shot = 1
-        else:
-            shot = 0
+            if (self.current_box_pos <= 2):
+                frame = 0
+            else:
+                frame = int(math.ceil((self.current_box_pos / 2.0))) - 1
+                
+            if (self.current_box_pos % 2 == 0):
+                shot = 1
+            else:
+                shot = 0
             
         #self.bowling_scorer.players[self.selected_player].DrawFrames(surface=screen_surface,yscew=50,showTotal=False,current_box=self.current_box_pos)
         if (key == "X" or key == "x"):
-            self.bowling_scorer.players[self.selected_player].frames[frame].makeStrike()
+            if (self.current_box_pos >= 19):
+                self.bowling_scorer.players[self.selected_player].frames[frame].shots[shot] = 10
+            else:
+                self.bowling_scorer.players[self.selected_player].frames[frame].makeStrike()
+            
+            self.bowling_scorer.pinCounter.last_ball_score = 10
         elif (key == "/"):
-            self.bowling_scorer.players[self.selected_player].frames[frame].makeSpare()
+            if (self.current_box_pos >= 19):
+                self.bowling_scorer.players[self.selected_player].frames[frame].shots[shot] = 10 - self.bowling_scorer.players[self.selected_player].frames[frame].shots[shot - 1]
+            else:
+                self.bowling_scorer.players[self.selected_player].frames[frame].makeSpare()
         else:
             self.bowling_scorer.players[self.selected_player].frames[frame].shots[shot] = int(key)
+            self.bowling_scorer.pinCounter.last_ball_score = int(key)
         
 class SkipBowlerScreen(Screen):
     def __init__(self, screen_manager):
@@ -663,12 +693,18 @@ class AddBowlerScreen(Screen):
         self.bowler_name4 = TextBox(30, 190, 7)
         self.bowler_blacklight4 = CheckBox(180, 190, 8)
         
-        self.add_button = Button(100, 220, "Add Bowlers", self.onAddBowlerSelected, 9)
+        self.mode_10pin = CheckBox(30, 220, 9)
+        self.mode_9pin = CheckBox(150, 220, 10)
+        self.mode_8pin = CheckBox(270, 220, 11)
+        self.mode_7pin = CheckBox(390, 220, 12)
+        
+        self.add_button = Button(100, 250, "Add Bowlers", self.onAddBowlerSelected, 13)
         
         self.title_font = pygame.font.SysFont("Arial", 36, True, True)
         self.field_name_font = pygame.font.SysFont("Arial", 24, True)
         
         self.bowler_name1.selected = True
+        self.mode_10pin.checked = True
         
         self.components.append(self.bowler_name1)
         self.components.append(self.bowler_blacklight1)
@@ -678,6 +714,10 @@ class AddBowlerScreen(Screen):
         self.components.append(self.bowler_blacklight3)
         self.components.append(self.bowler_name4)
         self.components.append(self.bowler_blacklight4)
+        self.components.append(self.mode_10pin)
+        self.components.append(self.mode_9pin)
+        self.components.append(self.mode_8pin)
+        self.components.append(self.mode_7pin)
         self.components.append(self.add_button)
         
     def onAddBowlerSelected(self):
@@ -705,6 +745,11 @@ class AddBowlerScreen(Screen):
             self.bowling_scorer.decklight.Blacklight()
         else:
             self.bowling_scorer.decklight.Whitelight()
+            
+        self.bowling_scorer.min_pincount_strike = 10
+        if (self.mode_9pin.checked): self.bowling_scorer.min_pincount_strike = 9
+        elif (self.mode_8pin.checked): self.bowling_scorer.min_pincount_strike = 8
+        elif (self.mode_7pin.checked): self.bowling_scorer.min_pincount_strike = 7
         
         self.screen_manager.AddScreen(self.screen_manager.score)
         self.Close()
@@ -743,6 +788,22 @@ class AddBowlerScreen(Screen):
         textpos = text.get_rect(centerx=400, y=540)
         screen_surface.blit(text, textpos)
         
+        text = self.field_name_font.render("Regular", 1, (0,0,0))
+        textpos = text.get_rect(x=60, y=220)
+        screen_surface.blit(text, textpos)
+        
+        text = self.field_name_font.render("9 Pin", 1, (0,0,0))
+        textpos = text.get_rect(x=180, y=220)
+        screen_surface.blit(text, textpos)
+        
+        text = self.field_name_font.render("8 Pin", 1, (0,0,0))
+        textpos = text.get_rect(x=300, y=220)
+        screen_surface.blit(text, textpos)
+        
+        text = self.field_name_font.render("7 Pin", 1, (0,0,0))
+        textpos = text.get_rect(x=420, y=220)
+        screen_surface.blit(text, textpos)
+        
         super(AddBowlerScreen, self).Draw(screen_surface)
         
     def HandleEvent(self, event):
@@ -750,6 +811,8 @@ class AddBowlerScreen(Screen):
         
         if (event.type == KEYDOWN and event.key == K_DOWN):
             self.selectNextItem()
+        elif (event.type == KEYDOWN and event.key == K_UP):
+            self.selectPrevItem()
         
         return False
     
@@ -773,10 +836,30 @@ class AddBowlerScreen(Screen):
                     e.selected = True
                     break
                 
+    def selectPrevItem(self):
+        self.current_tab -= 1
+        
+        selection_changed = False
+        for e in self.components:
+            e.selected = False
+            
+        for e in self.components:
+            if e.taborder == self.current_tab and e.selected != None:
+                e.selected = True
+                selection_changed = True
+                break
+            
+        if not selection_changed:
+            self.current_tab = self._getMaxComponentID()
+            for e in self.components:
+                if e.selected != None:
+                    e.selected = True
+                    break
         
     
     def Update(self, game_time):
         super(AddBowlerScreen, self).Update(game_time)
+        
         
     def Close(self):
         self.screen_manager.RemoveScreen(self)
@@ -927,6 +1010,7 @@ class CalibrateCameraScreen(Screen):
                 return
             
             print "Adding calibration marker at (%d, %d)" % event.pos
+            
             
             posx = event.pos[0] - 2
             posy = event.pos[1] - 2
