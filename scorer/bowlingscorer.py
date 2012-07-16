@@ -9,6 +9,7 @@ from screens import *
 from player import *
 from frame import *
 from config import *
+from log import *
 from hardware import arduino
 from hardware import decklight
 
@@ -28,12 +29,14 @@ class BowlingScorer(object):
     instance = None
     
     def __init__(self):
+        logger.info("Created BowlingScorer object")
         self.mode = "GAME_OVER"
         BowlingScorer.instance = self
         self.is_first_ball = True
         self.min_pincount_strike = 10
     
     def cleanup(self):
+        logger.info("BowlingScorer.cleanup()")
         self.screenManager.Cleanup()
         self.pinCounter.cleanup()
         self.hw.Close()
@@ -50,18 +53,26 @@ class BowlingScorer(object):
     
     def main(self):
         # END GLOBAL DECLARATIONS ========================================
-        
+        logger.info("Creating config object...")
         self.config = Config()
         #self.config.reset()
+        try:
+            logger.info("Loading config file...")
+            self.config.load()
+        except:
+            logger.critical("Config file not loaded")
+            logger.exception('')
         
-        self.config.load()
-        
+        logger.info("Creating hardware interface...")
         self.hw = arduino.Arduino(self.config.getvalue("Hardware","port"))
+        
+        logger.info("Creating decklight controller...")
         self.decklight = decklight.DeckLight(self.hw, int(self.config.getvalue("Hardware","decklight_port")))
         
         self.frames_per_turn = int(self.config.getvalue("System","frames_per_turn"))
         
         # Initialize the pygame framework
+        logger.info("Initializing pygame display system...")
         pygame.init()
         
         self.clock = pygame.time.Clock()
@@ -75,15 +86,28 @@ class BowlingScorer(object):
             screen_flags = 0
             
         
-            
-        screen = pygame.display.set_mode(self.config.gettuple("Screen", "size"), screen_flags)
-        pygame.display.set_caption("Scorer")
-        
+        try:
+            logger.info("Creating screen display...")
+            screen = pygame.display.set_mode(self.config.gettuple("Screen", "size"), screen_flags)
+            pygame.display.set_caption("Scorer")
+        except:
+            logger.critical("Could not create display")
+            logger.exception('')
         #pygame.display.toggle_fullscreen()
         
-        self.pinCounter = PinCounter(screen)
+        try:
+            logger.info("Creating pinCounter...")
+            self.pinCounter = PinCounter(screen)
+        except:
+            logger.critical("Could not create pincounter")
+            logger.exception('')
         
-        self.screenManager = ScreenManager(self, screen)
+        try:
+            logger.info("Creating screen manager...")
+            self.screenManager = ScreenManager(self, screen)
+        except:
+            logger.critical("Could not create screen manager")
+            logger.exception('')
         
         self.screenManager.AddScreen(self.screenManager.boot)
         random.seed()
@@ -161,7 +185,7 @@ class PinCounter:
         self.screen = screen
         
         try:
-        
+            logger.info("Initializing camera...")
             pygame.camera.init()
             
             self.last_ball_score = 0
@@ -178,12 +202,17 @@ class PinCounter:
             # Initialize the camera, using the 0 (first) device
             # Also specify the size as 320x240
             # On linux, instead of '0' we should use /dev/video0
-            if (platform.system() == "Windows"):
-                self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
-            else:
-                self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
-            self.camera.start()
-            
+            try:
+                logging.info("Creating camera at size %s" % str(cam_size))
+                if (platform.system() == "Windows"):
+                    self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
+                else:
+                    self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
+                self.camera.start()
+            except:
+                logging.critical("Could not connect to camera")
+                logging.exception('')
+                
             self.snapshot = pygame.Surface(cam_size, 0, screen)
             self.thresholded = pygame.Surface(cam_size, 0, screen)
             
@@ -196,9 +225,8 @@ class PinCounter:
             
             
         except:
-            print "Camera initialization failed. Make sure the scoring camera is plugged in."
-            print "Stack Trace:"
-            traceback.print_exc(file=sys.stdout)
+            logging.critical("Camera initialization failed. Make sure the scoring camera is plugged in.")
+            logging.exception('')
             sys.exit()
     
         self.pin_display = []
@@ -249,7 +277,7 @@ class PinCounter:
         # (This happens on first ball)
         if not use_last_ball_score:
             self.last_ball_score = 10 - num_pins_standing
-            print "num_pins_standing: %d       last_ball_score: %d" % (num_pins_standing, self.last_ball_score)
+            logger.info("num_pins_standing: %d       last_ball_score: %d" % (num_pins_standing, self.last_ball_score))
             return (10 - num_pins_standing)
         else:
             current_ball_score = 10 - num_pins_standing
@@ -265,14 +293,18 @@ class PinCounter:
             #return (self.last_ball_score + (10 - current_ball_score))
         
     def getDeckSnapshot(self):
+        logger.info("Getting deck snapshot")
         if self.camera == None: return
+        logger.info("Capturing image from camera...")
         self.camera.get_image(self.snapshot)
         
+        logger.info("Thresholding image...")
         if (self.use_blacklight):
             pygame.transform.threshold(self.thresholded, self.snapshot, self.bl_detect_color, self.bl_threshold_detect, self.bl_other_colors_nondetect, 1)
         else:
             pygame.transform.threshold(self.thresholded, self.snapshot, self.detect_color, self.threshold_detect, self.other_colors_nondetect, 1)
-            
+        
+        logger.info("Creating resized surface for processing")
         resized = pygame.Surface((320,240), 0, self.screen)
             
         if self.thresholded != None:
@@ -285,13 +317,15 @@ class PinCounter:
     point sizes and threshold information for each point
     '''
     def reloadCalibration(self):
+        logger.info("Reloading calibration points...")
         del self.points[:]
         for i in range(10):
             self.points.append((-1,-1))
         for i in range(1,11):
             if (BowlingScorer.instance.config.gettuple("Calibration", "point_" + str(i)) != None):
                 self.points[i - 1] = BowlingScorer.instance.config.gettuple("Calibration", "point_" + str(i))
-            
+        
+        logger.info("Reloading calibration point info from file...")
         self.point_size = int(BowlingScorer.instance.config.getvalue("Calibration", "point_size"))
         self.min_points_to_trigger = int(BowlingScorer.instance.config.getvalue("Calibration", "min_points_to_trigger"))
         

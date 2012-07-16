@@ -5,13 +5,8 @@ Created on Apr 19, 2012
 '''
 
 import os, sys, logging
+from scorer.log import *
 
-logger = logging.getLogger('OpenScore')
-logging.basicConfig(level=logging.WARNING,
-              format='%(asctime)s %(name)-12s %(levelname)s: %(message)s',
-              datefmt='%Y-%m-%d %H:%M:%S',
-              filename='OpenScore.log',
-              filemode='w')
 #log_handler = logging.FileHandler('OpenScore.log')
 #formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 #log_handler.setFormatter(formatter)
@@ -23,11 +18,13 @@ from scorer.bowlingscorer import BowlingScorer
 progname = sys.argv[0]
 progdir = os.path.dirname(progname)
 sys.path.append(os.path.join(progdir,'components'))
-
+logger.info("Starting OpenScore...")
 if __name__ == '__main__':
     try:
+        #logging.info("Creating main BowlingScorer object...")
         app = BowlingScorer()
+        #logging.info("Entering run loop...")
         app.main()
     except:
-        logging.error("Exception encountered. OpenScore will now close:")
-        logging.exception('')
+        logger.info("Exception encountered. OpenScore will now close:")
+        logger.exception('')
