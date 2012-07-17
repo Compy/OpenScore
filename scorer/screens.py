@@ -128,6 +128,33 @@ class Screen(object):
 '''
 The boot screen that shows the splash imagery while the system boots up
 '''
+class ErrorScreen(Screen):
+    error_string = ""
+    def __init__(self, screen_manager):
+        super(ErrorScreen, self).__init__(screen_manager, 8)
+        self.error_font = pygame.font.SysFont("Arial", 18, False, True)
+        self.title_font = pygame.font.SysFont("Arial", 48, True)
+        
+    def Draw(self, screen_surface):
+        super(ErrorScreen, self).Draw(screen_surface)
+        
+        pygame.draw.rect(screen_surface, pygame.color.Color("red"), (0,0,800,600), 5)
+        
+        text = self.title_font.render("Fatal Error", 1, (255, 0, 0))
+        textpos = text.get_rect(centerx=400, y=10)
+        screen_surface.blit(text, textpos)
+        
+        text = self.error_font.render(ErrorScreen.error_string, 1, (255, 255,255))
+        textpos = text.get_rect(centerx=400, y=100)
+        screen_surface.blit(text, textpos)
+        
+    def Update(self, game_time):
+        super(ErrorScreen, self).Update(game_time)
+        
+    
+'''
+The boot screen that shows the splash imagery while the system boots up
+'''
 class BootScreen(Screen):
     def __init__(self, screen_manager):
         super(BootScreen, self).__init__(screen_manager, 8)
@@ -159,7 +186,6 @@ class BootScreen(Screen):
             self.screen_manager.AddScreen(self.screen_manager.score)
         
     def ScreenShown(self):
-        self.bowling_scorer.pinCounter.getPinCount(False)
         self.time_shown = self.screen_manager.game_time
         self.FadeIn()
         
@@ -1270,6 +1296,7 @@ class ScreenManager(object):
         self.skip_bowler = SkipBowlerScreen(self)
         self.add_bowler = AddBowlerScreen(self)
         self.remove_bowler = RemoveBowlerScreen(self)
+        self.error_screen = ErrorScreen(self)
         
         self.pindication = PindicationScreen(self)
         
@@ -1338,3 +1365,6 @@ class ScreenManager(object):
     def RemoveScreen(self, screen):
         #self.screens.pop(screen.priority)
         self.screens.remove(screen)
+        
+    def RemoveAllScreens(self):
+        self.screens = []

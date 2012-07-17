@@ -53,6 +53,7 @@ class BowlingScorer(object):
     
     def main(self):
         # END GLOBAL DECLARATIONS ========================================
+        
         logger.info("Creating config object...")
         self.config = Config()
         #self.config.reset()
@@ -62,6 +63,7 @@ class BowlingScorer(object):
         except:
             logger.critical("Config file not loaded")
             logger.exception('')
+            return
         
         logger.info("Creating hardware interface...")
         self.hw = arduino.Arduino(self.config.getvalue("Hardware","port"))
@@ -88,38 +90,42 @@ class BowlingScorer(object):
         
         try:
             logger.info("Creating screen display...")
-            screen = pygame.display.set_mode(self.config.gettuple("Screen", "size"), screen_flags)
+            self.screen = pygame.display.set_mode(self.config.gettuple("Screen", "size"), screen_flags)
             pygame.display.set_caption("Scorer")
         except:
             logger.critical("Could not create display")
             logger.exception('')
+            return
         #pygame.display.toggle_fullscreen()
         
         try:
-            logger.info("Creating pinCounter...")
-            self.pinCounter = PinCounter(screen)
-        except:
-            logger.critical("Could not create pincounter")
-            logger.exception('')
-        
-        try:
             logger.info("Creating screen manager...")
-            self.screenManager = ScreenManager(self, screen)
+            self.screenManager = ScreenManager(self, self.screen)
         except:
             logger.critical("Could not create screen manager")
             logger.exception('')
+            return
         
         self.screenManager.AddScreen(self.screenManager.boot)
         random.seed()
         
-                
+        try:
+            logger.info("Creating pinCounter...")
+            self.pinCounter = PinCounter(self.screen)
+            self.pinCounter.getPinCount(False)
+        except:
+            logger.critical("Could not create pincounter")
+            logger.exception('')
+            ErrorScreen.error_string = "Could not create pin counter. This usually means we couldn't connect to your camera."
+            self.showErrorScreen()
+            return        
         
         # Main game loop
         while not self.doExit:
             self.clock.tick(40)
             
             self.screenManager.Update(pygame.time.get_ticks())
-            screen.fill((0,0,0))
+            self.screen.fill((0,0,0))
             
             self.screenManager.Draw()
             
@@ -135,6 +141,19 @@ class BowlingScorer(object):
         
         # If we get here, do cleanup
         self.cleanup()
+        
+    def showErrorScreen(self):
+        self.screenManager.RemoveAllScreens()
+        self.screenManager.AddScreen(self.screenManager.error_screen)
+        while not self.doExit:
+            self.clock.tick(40)
+            self.screenManager.Update(pygame.time.get_ticks())
+            self.screen.fill((0,0,0))
+            self.screenManager.Draw()
+            for e in pygame.event.get():
+                if (e.type == QUIT):
+                    self.doExit = True
+            pygame.display.flip()
         
     def next_player(self):
         if (len(self.players)) == 0: return;
@@ -202,16 +221,12 @@ class PinCounter:
             # Initialize the camera, using the 0 (first) device
             # Also specify the size as 320x240
             # On linux, instead of '0' we should use /dev/video0
-            try:
-                logging.info("Creating camera at size %s" % str(cam_size))
-                if (platform.system() == "Windows"):
-                    self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
-                else:
-                    self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
-                self.camera.start()
-            except:
-                logging.critical("Could not connect to camera")
-                logging.exception('')
+            logging.info("Creating camera at size %s" % str(cam_size))
+            if (platform.system() == "Windows"):
+                self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
+            else:
+                self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
+            self.camera.start()
                 
             self.snapshot = pygame.Surface(cam_size, 0, screen)
             self.thresholded = pygame.Surface(cam_size, 0, screen)
@@ -227,7 +242,7 @@ class PinCounter:
         except:
             logging.critical("Camera initialization failed. Make sure the scoring camera is plugged in.")
             logging.exception('')
-            sys.exit()
+            raise Exception("Camera init failed")
     
         self.pin_display = []
         self.resetPinDisplay()
