@@ -171,7 +171,7 @@ class BootScreen(Screen):
         
         screen_surface.blit(self.bg, (0,0))
         
-        text = self.version_font.render("1.0 BETA", 1, (255, 255, 255))
+        text = self.version_font.render("1.1 BETA", 1, (255, 255, 255))
         textpos = text.get_rect(x=700, y=550)
         screen_surface.blit(text, textpos)
         

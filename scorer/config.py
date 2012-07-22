@@ -29,6 +29,15 @@ class Config(object):
         
         return self.config.get(section, key)
     
+    def getvalue_default(self, section, key, default_value):
+        if (self.config == None):
+            return default_value
+        
+        try:
+            return self.config.get(section, key)
+        except:
+            return default_value
+    
     def getboolean(self, section, key):
         if self.config == None:
             return False

@@ -217,15 +217,19 @@ class PinCounter:
             self.bl_detect_color = BowlingScorer.instance.config.gettuple("Camera", "bl_detect_color")
             self.bl_other_colors_nondetect = BowlingScorer.instance.config.gettuple("Camera", "bl_other_colors_nondetect")
             self.bl_threshold_detect = BowlingScorer.instance.config.gettuple("Camera", "bl_threshold_detect")
+            self.camera_idx = int(BowlingScorer.instance.config.getvalue_default("Camera", "camera_number", 0))
             
             # Initialize the camera, using the 0 (first) device
             # Also specify the size as 320x240
             # On linux, instead of '0' we should use /dev/video0
+            
+            self.camera_list = pygame.camera.list_cameras()
+            
             logging.info("Creating camera at size %s" % str(cam_size))
             if (platform.system() == "Windows"):
-                self.camera = pygame.camera.Camera(size=cam_size, mode = "YUV")
+                self.camera = pygame.camera.Camera(device=self.camera_list[self.camera_idx], size=cam_size, mode = "YUV")
             else:
-                self.camera = pygame.camera.Camera("/dev/video0", cam_size, "YUV")
+                self.camera = pygame.camera.Camera(self.camera_list[self.camera_idx], cam_size, "YUV")
             self.camera.start()
                 
             self.snapshot = pygame.Surface(cam_size, 0, screen)
