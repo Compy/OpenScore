@@ -4,6 +4,7 @@ import pygame
 import pygame.camera
 import random
 import hardware
+import time
 from pygame.locals import *
 from screens import *
 from player import *
@@ -262,8 +263,14 @@ class PinCounter:
     '''
     def getPinCount(self, use_last_ball_score = False):
         deck_surface = self.getDeckSnapshot()
-        if deck_surface == None:
-            return
+        retry_count = 0
+        while deck_surface == None and retry_count < 3:
+            self.cleanup()
+            time.sleep(5)
+            self.__init__(self.screen)
+            deck_surface = self.getDeckSnapshot()
+            retry_count += 1
+            
         self.resetPinDisplay()
         # Always assume there are 0 pins standing
         num_pins_standing = 0
@@ -300,7 +307,9 @@ class PinCounter:
             return (10 - num_pins_standing)
         else:
             current_ball_score = 10 - num_pins_standing
-            if (current_ball_score == 10):
+            if (self.last_ball_score + current_ball_score > 10):
+                return 10
+            elif (current_ball_score == 10):
                 return 10 - self.last_ball_score
             elif (current_ball_score == self.last_ball_score):
                 return 0
@@ -312,18 +321,30 @@ class PinCounter:
             #return (self.last_ball_score + (10 - current_ball_score))
         
     def getDeckSnapshot(self):
-        logger.info("Getting deck snapshot")
+        #logger.info("Getting deck snapshot")
         if self.camera == None: return
-        logger.info("Capturing image from camera...")
-        self.camera.get_image(self.snapshot)
-        
-        logger.info("Thresholding image...")
+        #logger.info("Capturing image from camera...")
+        try:
+            self.camera.get_image(self.snapshot)
+        except Exception, e:
+            self.snapshot = None
+            
+        if self.snapshot == None:
+            retry_count = 0
+            while self.snapshot == None and retry_count < 3:
+                self.cleanup()
+                time.sleep(5)
+                self.__init__(self.screen)
+                self.snapshot = self.camera.get_image(self.snapshot)
+                retry_count += 1
+            
+        #logger.info("Thresholding image...")
         if (self.use_blacklight):
             pygame.transform.threshold(self.thresholded, self.snapshot, self.bl_detect_color, self.bl_threshold_detect, self.bl_other_colors_nondetect, 1)
         else:
             pygame.transform.threshold(self.thresholded, self.snapshot, self.detect_color, self.threshold_detect, self.other_colors_nondetect, 1)
         
-        logger.info("Creating resized surface for processing")
+        #logger.info("Creating resized surface for processing")
         resized = pygame.Surface((320,240), 0, self.screen)
             
         if self.thresholded != None:

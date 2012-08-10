@@ -161,8 +161,9 @@ class BootScreen(Screen):
         self.bg = pygame.image.load("splash.jpg")
         self.version_font = pygame.font.SysFont("Arial", 18, False, True)
         self.welcome_font = pygame.font.SysFont("Arial", 48, True)
-        self.display_time = 8000 # 8000ms = 8s
+        self.display_time = 15000 # 8000ms = 8s
         self.time_shown = 0
+        self.display_cam = False
         self.center_name = self.bowling_scorer.config.getvalue("System","center_name")
         
     def Draw(self, screen_surface):
@@ -171,10 +172,23 @@ class BootScreen(Screen):
         
         screen_surface.blit(self.bg, (0,0))
         
+        
+        print "[BURN IN] Getting deck snapshot"
+        snapshot = self.bowling_scorer.pinCounter.getDeckSnapshot()
+        
+        if (self.display_cam):
+            screen_surface.blit(snapshot, (0,0))
+        
         text = self.version_font.render("1.1 BETA", 1, (255, 255, 255))
         textpos = text.get_rect(x=700, y=550)
         screen_surface.blit(text, textpos)
         
+    def HandleEvent(self, e):
+        if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_d:
+                self.display_cam = not self.display_cam
+            
+    
     def Update(self, game_time):
         super(BootScreen, self).Update(game_time)
         
