@@ -179,7 +179,7 @@ class BootScreen(Screen):
         if (self.display_cam):
             screen_surface.blit(snapshot, (0,0))
         
-        text = self.version_font.render("1.2 BETA", 1, (255, 255, 255))
+        text = self.version_font.render("1.3 BETA", 1, (255, 255, 255))
         textpos = text.get_rect(x=700, y=550)
         screen_surface.blit(text, textpos)
         
@@ -379,7 +379,7 @@ class MainMenuScreen(Screen):
         self.menu_font = pygame.font.SysFont("Arial", 24, True)
         self.menu = Menu(self.onMenuClosed, (230,230,230), 250, 250)
         #self.menu.AddMenuItem("Reset Pins", self.onResetPinsSelected)
-        self.menu.AddMenuItem("Add Bowler", self.onAddBowlerSelected)
+        self.menu.AddMenuItem("Add/Modify Bowlers", self.onAddBowlerSelected)
         self.menu.AddMenuItem("Remove Bowler", self.onRemoveBowlerSelected)
         self.menu.AddMenuItem("Skip Bowler", self.onSkipBowlerSelected)
         self.menu.AddMenuItem("Score Correction", self.onScoreCorrectionSelected)
@@ -602,17 +602,17 @@ class ScoreCorrectionScreen(Screen):
         
     def Draw(self, screen_surface):
         screen_surface.set_alpha(self.alpha,RLEACCEL)
-        screen_surface.fill((220,220,220))
+        screen_surface.fill((0,0,0))
         
-        text = self.title_font.render("Score Correction", 1, (0,0,0))
+        text = self.title_font.render("Score Correction", 1, (255,255,255))
         textpos = text.get_rect(x=10, y=10)
         screen_surface.blit(text, textpos)
         
-        text = self.text_font.render("Select the frame to correct. Use the arrows to move left/right", 1, (0,0,0))
+        text = self.text_font.render("Select the frame to correct. Use the arrows to move left/right", 1, (255,255,255))
         textpos = text.get_rect(x=10, y=50)
         screen_surface.blit(text, textpos)
         
-        text = self.text_font.render("Hit ESC to exit", 1, (0,0,0))
+        text = self.text_font.render("Hit ESC to exit", 1, (255,255,255))
         textpos = text.get_rect(x=10, y=500)
         screen_surface.blit(text, textpos)
         
@@ -779,6 +779,20 @@ class AddBowlerScreen(Screen):
         if (self.bowler_name4.value != "" and current_num_bowlers < 4):
             self.bowling_scorer.addPlayer(self.bowler_name4.value, self.bowler_blacklight4.checked)
         
+        current_num_bowlers = len(self.bowling_scorer.players)
+        if current_num_bowlers >= 1:
+            self.bowling_scorer.players[0].name = self.bowler_name1.value
+            self.bowling_scorer.players[0].blacklight = self.bowler_blacklight1.checked
+        if current_num_bowlers >= 2:
+            self.bowling_scorer.players[1].name = self.bowler_name2.value
+            self.bowling_scorer.players[1].blacklight = self.bowler_blacklight2.checked
+        if current_num_bowlers >= 3:
+            self.bowling_scorer.players[2].name = self.bowler_name3.value
+            self.bowling_scorer.players[2].blacklight = self.bowler_blacklight3.checked
+        if current_num_bowlers >= 4:
+            self.bowling_scorer.players[3].name = self.bowler_name4.value
+            self.bowling_scorer.players[3].blacklight = self.bowler_blacklight4.checked
+            
         #print "Adding bowler %s (blacklight: %s)" % (str(bowler_name),str(bowler_blacklight))
         
         self.bowling_scorer.current_player = 0
@@ -796,6 +810,21 @@ class AddBowlerScreen(Screen):
         
         self.screen_manager.AddScreen(self.screen_manager.score)
         self.Close()
+        
+    def ScreenShown(self):
+        # Load current bowler information into fields
+        if len(self.bowling_scorer.players) >= 1:
+            self.bowler_name1.value = self.bowling_scorer.players[0].name
+            self.bowler_blacklight1.checked = self.bowling_scorer.players[0].blacklight
+        if len(self.bowling_scorer.players) >= 2:
+            self.bowler_name2.value = self.bowling_scorer.players[1].name
+            self.bowler_blacklight2.checked = self.bowling_scorer.players[1].blacklight
+        if len(self.bowling_scorer.players) >= 3:
+            self.bowler_name3.value = self.bowling_scorer.players[2].name
+            self.bowler_blacklight3.checked = self.bowling_scorer.players[2].blacklight
+        if len(self.bowling_scorer.players) >= 4:
+            self.bowler_name4.value = self.bowling_scorer.players[3].name
+            self.bowler_blacklight4.checked = self.bowling_scorer.players[3].blacklight
         
     def Draw(self, screen_surface):
         screen_surface.set_alpha(self.alpha,RLEACCEL)

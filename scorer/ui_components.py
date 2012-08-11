@@ -72,7 +72,7 @@ class CheckBox(DrawableComponent):
         if self.selected != True:
             return
         
-        if key == K_RETURN or key == K_DOWN or key == K_UP:
+        if key == K_RETURN or key == K_DOWN or key == K_UP or key == K_LEFT or key == K_RIGHT:
             return
         
         self.checked = not self.checked
