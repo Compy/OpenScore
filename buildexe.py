@@ -51,7 +51,7 @@ class BuildExe:
         self.project_url = "http://openscore.catster.net/"
 
         #Version of program
-        self.project_version = "1.0"
+        self.project_version = "1.2"
 
         #License of the program
         self.license = "GNU GPL"
