@@ -4,6 +4,7 @@ import pygame
 import pygame.camera
 import random
 import hardware
+import pickle
 import time
 from pygame.locals import *
 from screens import *
@@ -77,6 +78,8 @@ class BowlingScorer(object):
         # Initialize the pygame framework
         logger.info("Initializing pygame display system...")
         pygame.init()
+        
+        self.restore_state()
         
         self.clock = pygame.time.Clock()
         
@@ -182,9 +185,13 @@ class BowlingScorer(object):
             self.current_player = -1
             self.screenManager.score.show_marquee = True
             self.screenManager.score.show_help_text = False
+            self.remove_state()
             
     def new_game(self):
         if len(self.players) == 0: return
+        
+        if (os.path.exists("current.state")):
+            os.remove("current.state")
         
         for p in self.players:
             p.reset()
@@ -194,6 +201,35 @@ class BowlingScorer(object):
         self.current_ball = 0
         self.screenManager.score.show_marquee = False
         self.screenManager.score.show_help_text = True
+        
+    def dump_current_state(self):
+        try:
+            outfile = open("current.state", "wb")
+            pickle.dump(self.players, outfile)
+            outfile.close()
+        except:
+            logger.error("Crap, couldn't save state.")
+            logger.exception('')
+            
+    def remove_state(self):
+        try:
+            os.remove("current.state")
+        except:
+            logger.error("Could not remove saved state")
+            logger.exception('')
+        
+    def restore_state(self):
+        try:
+            if (os.path.exists("current.state")):
+                infile = open("current.state", "rb")
+                self.players = pickle.load(infile)
+                infile.close()
+                for player in self.players:
+                    player.bowling_scorer = self
+        except:
+            logger.error("Crap, couldn't load saved state. Skipping")
+            logger.exception('')
+            self.remove_state()
 
 class PinCounter:
     camera = None

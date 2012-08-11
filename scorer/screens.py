@@ -466,7 +466,7 @@ class AdvancedScreen(Screen):
         self.bowling_scorer.current_player = -1
         self.bowling_scorer.current_frame = 0
         self.bowling_scorer.current_ball = 0
-        
+        #self.bowling_scorer.remove_state()
         self.screen_manager.boot.FadeIn()
         self.screen_manager.AddScreen(self.screen_manager.boot)
         
@@ -853,6 +853,10 @@ class AddBowlerScreen(Screen):
             self.selectNextItem()
         elif (event.type == KEYDOWN and event.key == K_UP):
             self.selectPrevItem()
+        elif (event.type == KEYDOWN and event.key == K_LEFT):
+            self.selectPrevItem()
+        elif (event.type == KEYDOWN and event.key == K_RIGHT):
+            self.selectNextItem()
         
         return False
     

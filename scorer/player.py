@@ -58,6 +58,16 @@ class Player(object):
             f = Frame(i + 1)
             self.frames.append(f)
     
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['bowling_scorer']
+        del odict['score_font']
+        return odict
+    
+    def __setstate__(self, dict):
+        self.__dict__.update(dict)
+        self.score_font = pygame.font.SysFont("Arial", 36, True)
+    
     '''
     Resets all player data to default settings. This is used to clear
     player data for a new game
@@ -148,6 +158,9 @@ class Player(object):
             self.current_frame += 1
             
         self.current_roll += 1
+        
+        if self.bowling_scorer.current_player != -1:
+            self.bowling_scorer.dump_current_state()
         
     '''
     A half-assed attempt at score calculation 'per-frame'. This needs to be re-written.
