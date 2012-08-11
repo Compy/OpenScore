@@ -450,7 +450,7 @@ class AdvancedScreen(Screen):
         super(AdvancedScreen, self).__init__(screen_manager,8)
         self.menu_font = pygame.font.SysFont("Arial", 24, True)
         self.menu = Menu(self.onMenuClosed, (230,230,230), 250, 250)
-        self.menu.AddMenuItem("Restart Scorer", self.onRestartScorerSelected)
+        self.menu.AddMenuItem("Restart Scorer & Discard Scores", self.onRestartScorerSelected)
         self.menu.AddMenuItem("Calibrate Scorer Camera", self.onCalibrateCameraSelected)
         self.menu.AddMenuItem("Exit Scorer System", self.onExitScorerSelected)
         self.menu.AddMenuItem("Exit Menu", self.onMenuClosed)

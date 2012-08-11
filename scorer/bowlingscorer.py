@@ -343,9 +343,7 @@ class PinCounter:
             return (10 - num_pins_standing)
         else:
             current_ball_score = 10 - num_pins_standing
-            if (self.last_ball_score + current_ball_score > 10):
-                return 10
-            elif (current_ball_score == 10):
+            if (current_ball_score == 10):
                 return 10 - self.last_ball_score
             elif (current_ball_score == self.last_ball_score):
                 return 0
