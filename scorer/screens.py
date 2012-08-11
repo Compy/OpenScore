@@ -714,6 +714,7 @@ class SkipBowlerScreen(Screen):
     def onBowlerSelected(self, bowler_num):
         print "Skipping to bowler %d" % bowler_num
         self.bowling_scorer.current_player = bowler_num
+        self.bowling_scorer.pinCounter.use_blacklight = self.bowling_scorer.players[bowler_num].blacklight
         self.screen_manager.RemoveScreen(self)
         self.screen_manager.AddScreen(self.screen_manager.score)
         
@@ -783,8 +784,10 @@ class AddBowlerScreen(Screen):
         self.bowling_scorer.current_player = 0
         if (bowler_blacklight == True):
             self.bowling_scorer.decklight.Blacklight()
+            self.bowling_scorer.pinCounter.use_blacklight = True
         else:
             self.bowling_scorer.decklight.Whitelight()
+            self.bowling_scorer.pinCounter.use_blacklight = False
             
         self.bowling_scorer.min_pincount_strike = 10
         if (self.mode_9pin.checked): self.bowling_scorer.min_pincount_strike = 9

@@ -202,6 +202,8 @@ class BowlingScorer(object):
         self.screenManager.score.show_marquee = False
         self.screenManager.score.show_help_text = True
         
+        self.pinCounter.use_blacklight = self.players[self.current_player].blacklight
+        
     def dump_current_state(self):
         try:
             outfile = open("current.state", "wb")
