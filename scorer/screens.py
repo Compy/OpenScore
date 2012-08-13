@@ -381,7 +381,7 @@ class MainMenuScreen(Screen):
         #self.menu.AddMenuItem("Reset Pins", self.onResetPinsSelected)
         self.menu.AddMenuItem("Add/Modify Bowlers", self.onAddBowlerSelected)
         self.menu.AddMenuItem("Remove Bowler", self.onRemoveBowlerSelected)
-        self.menu.AddMenuItem("Skip Bowler", self.onSkipBowlerSelected)
+        self.menu.AddMenuItem("Skip to Bowler", self.onSkipBowlerSelected)
         self.menu.AddMenuItem("Score Correction", self.onScoreCorrectionSelected)
         self.menu.AddMenuItem("New Game", self.onNewGameSelected)
         self.menu.AddMenuItem("Manager Functions", self.onAdvancedSelected)
