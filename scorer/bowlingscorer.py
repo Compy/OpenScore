@@ -29,6 +29,7 @@ class BowlingScorer(object):
     current_frame = 0
     current_ball = 0    # 0: first 1: second 2: third (tenth frame only)
     instance = None
+    debug = False
     
     def __init__(self):
         logger.info("Created BowlingScorer object")
@@ -36,6 +37,7 @@ class BowlingScorer(object):
         BowlingScorer.instance = self
         self.is_first_ball = True
         self.min_pincount_strike = 10
+        self.debug = False
     
     def cleanup(self):
         logger.info("BowlingScorer.cleanup()")

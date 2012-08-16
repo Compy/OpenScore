@@ -179,7 +179,7 @@ class BootScreen(Screen):
         if (self.display_cam):
             screen_surface.blit(snapshot, (0,0))
         
-        text = self.version_font.render("1.3 BETA", 1, (255, 255, 255))
+        text = self.version_font.render("1.4 BETA", 1, (255, 255, 255))
         textpos = text.get_rect(x=700, y=550)
         screen_surface.blit(text, textpos)
         
@@ -228,6 +228,8 @@ class ScoreScreen(Screen):
         '''
         Constructor
         '''
+        
+        self.do_debug = False
         
         super(ScoreScreen, self).__init__(screen_manager, 10)
         
@@ -315,6 +317,10 @@ class ScoreScreen(Screen):
         if self.show_marquee:
             textpos = self.marquee_text.get_rect(x=self.marquee_x,y=self.marquee_y)
             screen_surface.blit(self.marquee_text, textpos)
+            
+        if (self.do_debug == True):
+            surface = self.bowling_scorer.pinCounter.getDeckSnapshot()
+            screen_surface.blit(surface, (480,360))
     
     def Update(self, game_time):
         super(ScoreScreen,self).Update(game_time)
@@ -336,6 +342,8 @@ class ScoreScreen(Screen):
             if (e.key == K_SPACE):
                 self.screen_manager.RemoveScreen(self)
                 self.screen_manager.AddScreen(self.screen_manager.mainmenu)
+            if (e.key == K_d):
+                self.do_debug = not self.do_debug
                 
     def ScoreFromCamera(self):
         player = self.bowling_scorer.players[self.bowling_scorer.current_player]
@@ -416,7 +424,6 @@ class MainMenuScreen(Screen):
         self.Close()
     
     def onAddBowlerSelected(self):
-        if (len(self.bowling_scorer.players) == 4): return
         self.screen_manager.add_bowler.FadeIn()
         self.screen_manager.AddScreen(self.screen_manager.add_bowler)
         self.Close()
@@ -613,7 +620,7 @@ class ScoreCorrectionScreen(Screen):
         screen_surface.blit(text, textpos)
         
         text = self.text_font.render("Hit ESC to exit", 1, (255,255,255))
-        textpos = text.get_rect(x=10, y=500)
+        textpos = text.get_rect(x=10, y=560)
         screen_surface.blit(text, textpos)
         
         self.bowling_scorer.players[self.selected_player].DrawFrames(surface=screen_surface,yscew=50,showTotal=False,current_box=self.current_box_pos)
@@ -762,7 +769,7 @@ class AddBowlerScreen(Screen):
         self.components.append(self.add_button)
         
     def onAddBowlerSelected(self):
-        if (len(self.bowling_scorer.players) == 4): return
+        #if (len(self.bowling_scorer.players) == 4): return
         if (self.bowler_name1.value == ""): return
         
         current_num_bowlers = len(self.bowling_scorer.players)
@@ -781,16 +788,16 @@ class AddBowlerScreen(Screen):
         
         current_num_bowlers = len(self.bowling_scorer.players)
         if current_num_bowlers >= 1:
-            self.bowling_scorer.players[0].name = self.bowler_name1.value
+            self.bowling_scorer.players[0].name = self.bowler_name1.value.title()
             self.bowling_scorer.players[0].blacklight = self.bowler_blacklight1.checked
         if current_num_bowlers >= 2:
-            self.bowling_scorer.players[1].name = self.bowler_name2.value
+            self.bowling_scorer.players[1].name = self.bowler_name2.value.title()
             self.bowling_scorer.players[1].blacklight = self.bowler_blacklight2.checked
         if current_num_bowlers >= 3:
-            self.bowling_scorer.players[2].name = self.bowler_name3.value
+            self.bowling_scorer.players[2].name = self.bowler_name3.value.title()
             self.bowling_scorer.players[2].blacklight = self.bowler_blacklight3.checked
         if current_num_bowlers >= 4:
-            self.bowling_scorer.players[3].name = self.bowler_name4.value
+            self.bowling_scorer.players[3].name = self.bowler_name4.value.title()
             self.bowling_scorer.players[3].blacklight = self.bowler_blacklight4.checked
             
         #print "Adding bowler %s (blacklight: %s)" % (str(bowler_name),str(bowler_blacklight))
